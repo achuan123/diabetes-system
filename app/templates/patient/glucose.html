@@ -1,0 +1,169 @@
+{% extends 'patient/base_mobile.html' %}
+{% block title %}血糖记录 - 糖友健康{% endblock %}
+{% block topbar_title %}血糖记录{% endblock %}
+
+{% block content %}
+<!-- Add button as FAB -->
+<button class="fab" data-bs-toggle="offcanvas" data-bs-target="#addGlucoseSheet" title="添加血糖">
+    <i class="bi bi-plus-lg"></i>
+</button>
+
+<!-- Records list -->
+{% for record in pagination.items %}
+<div class="app-card" style="padding:14px 16px;">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <span class="fw-bold fs-5
+                {% if record.value > glucose_high %}glucose-high
+                {% elif record.value < glucose_low %}glucose-low
+                {% else %}glucose-normal{% endif %}">
+                {{ '%.1f'|format(record.value) }} mmol/L
+            </span>
+            {% if record.value > glucose_high %}
+            <span class="badge bg-danger ms-1" style="font-size:.7rem;">偏高</span>
+            {% elif record.value < glucose_low %}
+            <span class="badge bg-warning text-dark ms-1" style="font-size:.7rem;">偏低</span>
+            {% else %}
+            <span class="badge bg-success ms-1" style="font-size:.7rem;">正常</span>
+            {% endif %}
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-primary me-1"
+                    onclick="openEdit({{ record.id }}, {{ record.value }},
+                             '{{ record.measure_time.strftime('%Y-%m-%dT%H:%M') }}',
+                             '{{ record.meal_status or '' }}',
+                             '{{ (record.remark or '')|replace("'", "\\'") }}')">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <form method="post" class="d-inline"
+                  onsubmit="return confirm('确定删除这条血糖记录？')">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="record_id" value="{{ record.id }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div style="font-size:.85rem;color:#757575;margin-top:6px;">
+        <i class="bi bi-clock me-1"></i>{{ record.measure_time.strftime('%Y-%m-%d %H:%M') }}
+        {% if record.meal_status %}
+        &nbsp;·&nbsp;
+        {% if record.meal_status == 'before_meal' %}餐前
+        {% elif record.meal_status == 'after_meal' %}餐后
+        {% elif record.meal_status == 'fasting' %}空腹
+        {% else %}随机{% endif %}
+        {% endif %}
+    </div>
+    {% if record.remark %}
+    <div style="font-size:.85rem;color:#9E9E9E;margin-top:4px;"><i class="bi bi-chat-square-text me-1"></i>{{ record.remark }}</div>
+    {% endif %}
+</div>
+{% else %}
+<div class="text-center py-5" style="color:#BDBDBD;">
+    <i class="bi bi-droplet" style="font-size:3rem;"></i>
+    <p class="mt-2">暂无血糖记录<br><small>点击右下角「+」添加</small></p>
+</div>
+{% endfor %}
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<div class="d-flex justify-content-between align-items-center mt-2 px-1">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('patient.glucose', page=pagination.prev_num) }}" class="btn btn-sm btn-outline-secondary">上一页</a>
+    {% else %}<span></span>{% endif %}
+    <span style="font-size:.85rem;color:#9E9E9E;">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for('patient.glucose', page=pagination.next_num) }}" class="btn btn-sm btn-outline-secondary">下一页</a>
+    {% else %}<span></span>{% endif %}
+</div>
+{% endif %}
+
+<!-- Add sheet -->
+<div class="offcanvas offcanvas-bottom" id="addGlucoseSheet" tabindex="-1" style="height:auto;max-height:90vh;">
+    <div class="offcanvas-header">
+        <h6 class="mb-0 fw-bold">添加血糖记录</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="post">
+            <input type="hidden" name="action" value="add">
+            <div class="mb-3">
+                <label class="form-label">血糖值 (mmol/L) <span class="text-danger">*</span></label>
+                <input type="number" step="0.1" min="1" max="30" name="value" class="form-control" placeholder="如：6.2" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">测量时间 <span class="text-danger">*</span></label>
+                <input type="datetime-local" name="measure_time" class="form-control"
+                       value="{{ now.strftime('%Y-%m-%dT%H:%M') }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">餐食状态</label>
+                <select name="meal_status" class="form-select">
+                    <option value="">请选择</option>
+                    <option value="fasting">空腹</option>
+                    <option value="before_meal">餐前</option>
+                    <option value="after_meal">餐后</option>
+                    <option value="random">随机</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">备注</label>
+                <input type="text" name="remark" class="form-control" placeholder="可选">
+            </div>
+            <button type="submit" class="btn-app-primary">保存</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit sheet -->
+<div class="offcanvas offcanvas-bottom" id="editGlucoseSheet" tabindex="-1" style="height:auto;max-height:90vh;">
+    <div class="offcanvas-header">
+        <h6 class="mb-0 fw-bold">编辑血糖记录</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="post" id="editGlucoseForm">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="record_id" id="editRecordId">
+            <div class="mb-3">
+                <label class="form-label">血糖值 (mmol/L) <span class="text-danger">*</span></label>
+                <input type="number" step="0.1" min="1" max="30" name="value" id="editValue" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">测量时间 <span class="text-danger">*</span></label>
+                <input type="datetime-local" name="measure_time" id="editMeasureTime" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">餐食状态</label>
+                <select name="meal_status" id="editMealStatus" class="form-select">
+                    <option value="">请选择</option>
+                    <option value="fasting">空腹</option>
+                    <option value="before_meal">餐前</option>
+                    <option value="after_meal">餐后</option>
+                    <option value="random">随机</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">备注</label>
+                <input type="text" name="remark" id="editRemark" class="form-control" placeholder="可选">
+            </div>
+            <button type="submit" class="btn-app-primary">更新</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEdit(id, value, measureTime, mealStatus, remark) {
+    document.getElementById('editRecordId').value = id;
+    document.getElementById('editValue').value = value;
+    document.getElementById('editMeasureTime').value = measureTime;
+    document.getElementById('editMealStatus').value = mealStatus;
+    document.getElementById('editRemark').value = remark;
+    var sheet = new bootstrap.Offcanvas(document.getElementById('editGlucoseSheet'));
+    sheet.show();
+}
+</script>
+{% endblock %}

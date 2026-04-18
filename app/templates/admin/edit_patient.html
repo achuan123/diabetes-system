@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}编辑患者 - 糖尿病管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <a href="{{ url_for('admin.patients') }}" class="btn btn-outline-secondary btn-sm me-3">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <h4 class="mb-0"><i class="bi bi-pencil me-2 text-primary"></i>编辑患者信息</h4>
+</div>
+
+<div class="card" style="max-width:700px;">
+    <div class="card-body p-4">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">姓名 <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" value="{{ patient.name }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">年龄</label>
+                    <input type="number" name="age" class="form-control" min="0" max="120"
+                           value="{{ patient.age or '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">性别</label>
+                    <select name="gender" class="form-select">
+                        <option value="">请选择</option>
+                        <option value="male" {% if patient.gender == 'male' %}selected{% endif %}>男</option>
+                        <option value="female" {% if patient.gender == 'female' %}selected{% endif %}>女</option>
+                        <option value="other" {% if patient.gender == 'other' %}selected{% endif %}>其他</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">电话</label>
+                    <input type="text" name="phone" class="form-control" value="{{ patient.phone or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">糖尿病类型</label>
+                    <select name="diabetes_type" class="form-select">
+                        <option value="">请选择</option>
+                        <option value="1型糖尿病" {% if patient.diabetes_type == '1型糖尿病' %}selected{% endif %}>1型糖尿病</option>
+                        <option value="2型糖尿病" {% if patient.diabetes_type == '2型糖尿病' %}selected{% endif %}>2型糖尿病</option>
+                        <option value="妊娠期糖尿病" {% if patient.diabetes_type == '妊娠期糖尿病' %}selected{% endif %}>妊娠期糖尿病</option>
+                        <option value="其他类型" {% if patient.diabetes_type == '其他类型' %}selected{% endif %}>其他类型</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">主治医生</label>
+                    <select name="doctor_id" class="form-select">
+                        <option value="">-- 未分配 --</option>
+                        {% for d in doctors %}
+                        <option value="{{ d.id }}" {% if patient.doctor_id == d.id %}selected{% endif %}>
+                            {{ d.name or d.email }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">地址</label>
+                    <input type="text" name="address" class="form-control" value="{{ patient.address or '' }}">
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>保存修改
+                </button>
+                <a href="{{ url_for('admin.patients') }}" class="btn btn-outline-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

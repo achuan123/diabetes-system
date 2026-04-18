@@ -1,0 +1,75 @@
+{% extends 'patient/base_mobile.html' %}
+{% block title %}在线咨询 - 糖友健康{% endblock %}
+{% block topbar_title %}
+{% if patient.doctor %}与 {{ patient.doctor.name }} 咨询{% else %}在线咨询{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Chat messages -->
+<div id="chatMessages" style="padding-bottom:80px;">
+    {% if not messages %}
+    <div class="text-center py-5" style="color:#BDBDBD;">
+        <i class="bi bi-chat-dots" style="font-size:3rem;"></i>
+        <p class="mt-2 mb-0">暂无消息</p>
+        <p style="font-size:.85rem;">请在下方输入框发送咨询内容</p>
+    </div>
+    {% endif %}
+
+    {% for msg in messages %}
+    {% if msg.sender == 'patient' %}
+    <div class="d-flex justify-content-end mb-2">
+        <div>
+            <div class="chat-bubble chat-patient">{{ msg.content }}</div>
+            <div class="chat-time text-end">{{ msg.created_at.strftime('%m-%d %H:%M') }}</div>
+        </div>
+        <div style="width:36px;height:36px;background:#1976D2;border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    color:#fff;font-size:1rem;margin-left:8px;flex-shrink:0;align-self:flex-end;">
+            <i class="bi bi-person-fill"></i>
+        </div>
+    </div>
+    {% else %}
+    <div class="d-flex justify-content-start mb-2">
+        <div style="width:36px;height:36px;background:#E3F2FD;border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    color:#1976D2;font-size:1rem;margin-right:8px;flex-shrink:0;align-self:flex-end;">
+            <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div>
+            <div style="font-size:.75rem;color:#9E9E9E;margin-bottom:3px;">
+                {{ msg.doctor.name if msg.doctor else '医生' }}
+            </div>
+            <div class="chat-bubble chat-doctor">{{ msg.content }}</div>
+            <div class="chat-time">{{ msg.created_at.strftime('%m-%d %H:%M') }}</div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Fixed input bar -->
+<div style="position:fixed;bottom:60px;left:0;right:0;background:#fff;
+            border-top:1px solid #e0e0e0;padding:10px 12px;z-index:100;">
+    {% if not patient.doctor %}
+    <div class="text-center text-muted" style="font-size:.85rem;padding:8px 0;">
+        <i class="bi bi-info-circle me-1"></i>暂未分配主治医生，无法发起咨询
+    </div>
+    {% else %}
+    <form method="post" class="d-flex gap-2">
+        <input type="text" name="content" class="form-control" placeholder="请输入咨询内容…" required
+               style="border-radius:20px;flex:1;">
+        <button type="submit" class="btn btn-primary" style="border-radius:20px;padding:8px 18px;">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Scroll to bottom of chat
+var el = document.getElementById('chatMessages');
+if (el) window.scrollTo(0, document.body.scrollHeight);
+</script>
+{% endblock %}

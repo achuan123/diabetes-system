@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}管理员仪表盘 - 糖尿病管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>管理员仪表盘</h4>
+    <span class="text-muted small">系统总览</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card text-center p-4">
+            <div class="text-primary mb-2"><i class="bi bi-hospital" style="font-size:2rem;"></i></div>
+            <div class="display-6 text-primary">{{ total_patients }}</div>
+            <div class="text-muted mt-1">患者总数</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center p-4">
+            <div class="text-success mb-2"><i class="bi bi-person-badge" style="font-size:2rem;"></i></div>
+            <div class="display-6 text-success">{{ total_doctors }}</div>
+            <div class="text-muted mt-1">医生总数</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center p-4">
+            <div class="text-info mb-2"><i class="bi bi-droplet" style="font-size:2rem;"></i></div>
+            <div class="display-6 text-info">{{ recent_glucose }}</div>
+            <div class="text-muted mt-1">近7天血糖记录</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center p-4">
+            <div class="text-danger mb-2"><i class="bi bi-exclamation-triangle" style="font-size:2rem;"></i></div>
+            <div class="display-6 text-danger">{{ abnormal_count }}</div>
+            <div class="text-muted mt-1">近7天异常血糖</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header fw-bold"><i class="bi bi-bar-chart me-2"></i>近30天每日血糖记录数量</div>
+    <div class="card-body">
+        <canvas id="adminChart" height="80"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('{{ url_for("admin.chart_data") }}')
+    .then(r => r.json())
+    .then(data => {
+        const ctx = document.getElementById('adminChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.date),
+                datasets: [{
+                    label: '血糖记录条数',
+                    data: data.map(d => d.count),
+                    backgroundColor: 'rgba(13,110,253,0.6)',
+                    borderColor: '#0d6efd',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: true } },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '记录条数' } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

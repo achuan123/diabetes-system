@@ -1,0 +1,200 @@
+{% extends 'patient/base_mobile.html' %}
+{% block title %}运动记录 - 糖友健康{% endblock %}
+{% block topbar_title %}运动打卡{% endblock %}
+
+{% block content %}
+<button class="fab" data-bs-toggle="offcanvas" data-bs-target="#addExerciseSheet" title="添加运动">
+    <i class="bi bi-plus-lg"></i>
+</button>
+
+{% for record in pagination.items %}
+<div class="app-card" style="padding:14px 16px;">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <span class="fw-bold" style="color:#2E7D32;font-size:1.05rem;">
+                <i class="bi bi-lightning-fill me-1"></i>{{ record.exercise_type or '运动' }}
+            </span>
+            {% if record.intensity %}
+            <span class="badge ms-1 {% if record.intensity == 'low' %}bg-success{% elif record.intensity == 'medium' %}bg-warning text-dark{% else %}bg-danger{% endif %}" style="font-size:.7rem;">
+                {% if record.intensity == 'low' %}低强度{% elif record.intensity == 'medium' %}中强度{% else %}高强度{% endif %}
+            </span>
+            {% endif %}
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-primary me-1"
+                    onclick="openEditExercise({{ record.id }},
+                             '{{ record.exercise_type or '' }}',
+                             {{ record.duration or 'null' }},
+                             {{ record.calories or 'null' }},
+                             '{{ record.intensity or '' }}',
+                             '{{ record.record_time.strftime('%Y-%m-%dT%H:%M') }}',
+                             '{{ (record.remark or '')|replace("'", "\\'") }}')">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <form method="post" class="d-inline"
+                  onsubmit="return confirm('确定删除这条运动记录？')">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="record_id" value="{{ record.id }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div style="font-size:.85rem;color:#757575;margin-top:6px;">
+        <i class="bi bi-clock me-1"></i>{{ record.record_time.strftime('%Y-%m-%d %H:%M') }}
+        {% if record.duration %}&nbsp;·&nbsp;<i class="bi bi-stopwatch me-1"></i>{{ record.duration }}分钟{% endif %}
+        {% if record.calories %}&nbsp;·&nbsp;<i class="bi bi-fire me-1"></i>{{ record.calories }}千卡{% endif %}
+    </div>
+    {% if record.remark %}
+    <div style="font-size:.85rem;color:#9E9E9E;margin-top:4px;"><i class="bi bi-chat-square-text me-1"></i>{{ record.remark }}</div>
+    {% endif %}
+</div>
+{% else %}
+<div class="text-center py-5" style="color:#BDBDBD;">
+    <i class="bi bi-lightning" style="font-size:3rem;"></i>
+    <p class="mt-2">暂无运动记录<br><small>点击右下角「+」打卡</small></p>
+</div>
+{% endfor %}
+
+{% if pagination.pages > 1 %}
+<div class="d-flex justify-content-between align-items-center mt-2 px-1">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('patient.exercise', page=pagination.prev_num) }}" class="btn btn-sm btn-outline-secondary">上一页</a>
+    {% else %}<span></span>{% endif %}
+    <span style="font-size:.85rem;color:#9E9E9E;">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for('patient.exercise', page=pagination.next_num) }}" class="btn btn-sm btn-outline-secondary">下一页</a>
+    {% else %}<span></span>{% endif %}
+</div>
+{% endif %}
+
+<!-- Add sheet -->
+<div class="offcanvas offcanvas-bottom" id="addExerciseSheet" tabindex="-1" style="height:auto;max-height:92vh;">
+    <div class="offcanvas-header">
+        <h6 class="mb-0 fw-bold">添加运动记录</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="post">
+            <input type="hidden" name="action" value="add">
+            <div class="mb-3">
+                <label class="form-label">运动类型</label>
+                <select name="exercise_type" class="form-select">
+                    <option value="">请选择</option>
+                    <option value="步行">步行</option>
+                    <option value="慢跑">慢跑</option>
+                    <option value="游泳">游泳</option>
+                    <option value="骑车">骑车</option>
+                    <option value="太极拳">太极拳</option>
+                    <option value="广场舞">广场舞</option>
+                    <option value="瑜伽">瑜伽</option>
+                    <option value="爬山">爬山</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label">时长（分钟）</label>
+                    <input type="number" min="1" max="600" name="duration" class="form-control" placeholder="如：30">
+                </div>
+                <div class="col-6">
+                    <label class="form-label">消耗（千卡）</label>
+                    <input type="number" min="1" max="5000" name="calories" class="form-control" placeholder="如：150">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">强度</label>
+                <select name="intensity" class="form-select">
+                    <option value="">请选择</option>
+                    <option value="low">低强度</option>
+                    <option value="medium">中强度</option>
+                    <option value="high">高强度</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">运动时间 <span class="text-danger">*</span></label>
+                <input type="datetime-local" name="record_time" class="form-control"
+                       value="{{ now.strftime('%Y-%m-%dT%H:%M') }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">备注</label>
+                <input type="text" name="remark" class="form-control" placeholder="可选">
+            </div>
+            <button type="submit" class="btn-app-primary">保存</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit sheet -->
+<div class="offcanvas offcanvas-bottom" id="editExerciseSheet" tabindex="-1" style="height:auto;max-height:92vh;">
+    <div class="offcanvas-header">
+        <h6 class="mb-0 fw-bold">编辑运动记录</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="post" id="editExerciseForm">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="record_id" id="editExId">
+            <div class="mb-3">
+                <label class="form-label">运动类型</label>
+                <select name="exercise_type" id="editExType" class="form-select">
+                    <option value="">请选择</option>
+                    <option value="步行">步行</option>
+                    <option value="慢跑">慢跑</option>
+                    <option value="游泳">游泳</option>
+                    <option value="骑车">骑车</option>
+                    <option value="太极拳">太极拳</option>
+                    <option value="广场舞">广场舞</option>
+                    <option value="瑜伽">瑜伽</option>
+                    <option value="爬山">爬山</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label">时长（分钟）</label>
+                    <input type="number" min="1" max="600" name="duration" id="editExDuration" class="form-control">
+                </div>
+                <div class="col-6">
+                    <label class="form-label">消耗（千卡）</label>
+                    <input type="number" min="1" max="5000" name="calories" id="editExCalories" class="form-control">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">强度</label>
+                <select name="intensity" id="editExIntensity" class="form-select">
+                    <option value="">请选择</option>
+                    <option value="low">低强度</option>
+                    <option value="medium">中强度</option>
+                    <option value="high">高强度</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">运动时间 <span class="text-danger">*</span></label>
+                <input type="datetime-local" name="record_time" id="editExTime" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">备注</label>
+                <input type="text" name="remark" id="editExRemark" class="form-control">
+            </div>
+            <button type="submit" class="btn-app-primary">更新</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEditExercise(id, type, duration, calories, intensity, recTime, remark) {
+    document.getElementById('editExId').value = id;
+    document.getElementById('editExType').value = type;
+    document.getElementById('editExDuration').value = duration === 'null' ? '' : duration;
+    document.getElementById('editExCalories').value = calories === 'null' ? '' : calories;
+    document.getElementById('editExIntensity').value = intensity;
+    document.getElementById('editExTime').value = recTime;
+    document.getElementById('editExRemark').value = remark;
+    new bootstrap.Offcanvas(document.getElementById('editExerciseSheet')).show();
+}
+</script>
+{% endblock %}

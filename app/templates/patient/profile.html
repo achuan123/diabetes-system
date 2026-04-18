@@ -1,0 +1,56 @@
+{% extends 'patient/base_mobile.html' %}
+{% block title %}我的 - 糖友健康{% endblock %}
+{% block topbar_title %}我的{% endblock %}
+
+{% block content %}
+<!-- Avatar + name banner -->
+<div class="app-card" style="background:linear-gradient(135deg,#1976D2,#42A5F5);color:#fff;padding:24px 20px;text-align:center;">
+    <div style="width:72px;height:72px;background:rgba(255,255,255,.25);border-radius:50%;
+                display:flex;align-items:center;justify-content:center;
+                font-size:2rem;margin:0 auto 12px;">
+        <i class="bi bi-person-fill"></i>
+    </div>
+    <div style="font-size:1.2rem;font-weight:700;">{{ patient.name }}</div>
+    <div style="font-size:.85rem;opacity:.8;margin-top:4px;">{{ patient.diabetes_type or '糖尿病患者' }}</div>
+</div>
+
+<!-- Info card -->
+<div class="app-card">
+    <div class="section-header">基本信息</div>
+    {% macro info_row(icon, label, value) %}
+    <div class="list-item">
+        <div class="list-item-icon" style="background:#E3F2FD;color:#1976D2;"><i class="bi {{ icon }}"></i></div>
+        <div style="flex:1;">
+            <div style="font-size:.78rem;color:#9E9E9E;">{{ label }}</div>
+            <div style="font-size:.95rem;">{{ value or '未填写' }}</div>
+        </div>
+    </div>
+    {% endmacro %}
+    {{ info_row('bi-gender-ambiguous', '性别',
+        '男' if patient.gender == 'male' else ('女' if patient.gender == 'female' else '其他') if patient.gender else None) }}
+    {{ info_row('bi-calendar3', '年龄', patient.age ~ ' 岁' if patient.age else None) }}
+    {{ info_row('bi-phone', '手机', patient.phone) }}
+    {{ info_row('bi-geo-alt', '地址', patient.address) }}
+    {{ info_row('bi-hospital', '主治医生', patient.doctor.name if patient.doctor else '未分配') }}
+</div>
+
+<!-- Function shortcuts -->
+<div class="app-card">
+    <div class="section-header">功能</div>
+    <a href="{{ url_for('patient.reminders') }}" class="list-item text-decoration-none" style="color:#212121;">
+        <div class="list-item-icon" style="background:#FCE4EC;color:#C62828;"><i class="bi bi-bell-fill"></i></div>
+        <div style="flex:1;font-size:.95rem;">健康提醒</div>
+        <i class="bi bi-chevron-right text-muted"></i>
+    </a>
+    <a href="{{ url_for('patient.family') }}" class="list-item text-decoration-none" style="color:#212121;">
+        <div class="list-item-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="bi bi-people-fill"></i></div>
+        <div style="flex:1;font-size:.95rem;">家属绑定</div>
+        <i class="bi bi-chevron-right text-muted"></i>
+    </a>
+    <a href="{{ url_for('patient.logout') }}" class="list-item text-decoration-none" style="color:#C62828;"
+       onclick="return confirm('确定退出登录？')">
+        <div class="list-item-icon" style="background:#FFEBEE;color:#C62828;"><i class="bi bi-box-arrow-right"></i></div>
+        <div style="flex:1;font-size:.95rem;">退出登录</div>
+    </a>
+</div>
+{% endblock %}

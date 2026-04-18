@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}患者管理 - 糖尿病管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-hospital me-2 text-primary"></i>患者管理</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+        <i class="bi bi-plus-lg me-1"></i>添加患者
+    </button>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">按姓名搜索</label>
+                <input type="text" name="search" class="form-control" placeholder="输入患者姓名..."
+                       value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>搜索
+                </button>
+            </div>
+            {% if search %}
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.patients') }}" class="btn btn-outline-secondary w-100">清除</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>姓名</th>
+                    <th>年龄</th>
+                    <th>性别</th>
+                    <th>糖尿病类型</th>
+                    <th>主治医生</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in pagination.items %}
+                <tr>
+                    <td class="text-muted">{{ patient.id }}</td>
+                    <td class="fw-semibold">{{ patient.name }}</td>
+                    <td>{{ patient.age or '-' }}</td>
+                    <td>
+                        {% if patient.gender == 'male' %}<span class="badge bg-info">男</span>
+                        {% elif patient.gender == 'female' %}<span class="badge bg-pink" style="background:#e83e8c!important;">女</span>
+                        {% else %}<span class="badge bg-secondary">其他</span>{% endif %}
+                    </td>
+                    <td>{{ patient.diabetes_type or '-' }}</td>
+                    <td>{{ patient.doctor.name if patient.doctor else '<span class="text-muted">未分配</span>' | safe }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_patient', patient_id=patient.id) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i>编辑
+                        </a>
+                        <form method="post"
+                              action="{{ url_for('admin.delete_patient', patient_id=patient.id) }}"
+                              class="d-inline"
+                              onsubmit="return confirm('确定要删除患者「{{ patient.name | e }}」及其所有关联记录吗？此操作不可撤销。');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash me-1"></i>删除
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">暂无患者数据</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.patients', page=pagination.prev_num, search=search) }}">上一页</a>
+        </li>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+            {% if p %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('admin.patients', page=p, search=search) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('admin.patients', page=pagination.next_num, search=search) }}">下一页</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Add Patient Modal -->
+<div class="modal fade" id="addPatientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>添加患者</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="form_action" value="add_patient">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">姓名 <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="患者姓名" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">年龄</label>
+                            <input type="number" name="age" class="form-control" min="0" max="120" placeholder="年龄">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">性别</label>
+                            <select name="gender" class="form-select">
+                                <option value="">请选择</option>
+                                <option value="male">男</option>
+                                <option value="female">女</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">电话</label>
+                            <input type="text" name="phone" class="form-control" placeholder="联系电话">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">糖尿病类型</label>
+                            <select name="diabetes_type" class="form-select">
+                                <option value="">请选择</option>
+                                <option value="1型糖尿病">1型糖尿病</option>
+                                <option value="2型糖尿病">2型糖尿病</option>
+                                <option value="妊娠期糖尿病">妊娠期糖尿病</option>
+                                <option value="其他类型">其他类型</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">主治医生</label>
+                            <select name="doctor_id" class="form-select">
+                                <option value="">-- 未分配 --</option>
+                                {% for d in doctors %}
+                                <option value="{{ d.id }}">{{ d.name or d.email }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">地址</label>
+                            <input type="text" name="address" class="form-control" placeholder="家庭地址">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

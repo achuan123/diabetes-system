@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}医生仪表盘 - 糖尿病管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>仪表盘</h4>
+    <span class="text-muted small">欢迎回来，{{ session.get('name') }} 医生</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card text-center p-4">
+            <div class="text-primary mb-2"><i class="bi bi-people-fill" style="font-size:2.5rem;"></i></div>
+            <div class="display-6 text-primary">{{ patient_count }}</div>
+            <div class="text-muted mt-1">我的患者总数</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card text-center p-4">
+            <div class="text-danger mb-2"><i class="bi bi-exclamation-triangle-fill" style="font-size:2.5rem;"></i></div>
+            <div class="display-6 text-danger">{{ abnormal_count }}</div>
+            <div class="text-muted mt-1">近7天异常血糖</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card text-center p-4">
+            <div class="text-warning mb-2"><i class="bi bi-bell-fill" style="font-size:2.5rem;"></i></div>
+            <div class="display-6 text-warning">{{ reminder_count }}</div>
+            <div class="text-muted mt-1">提醒总数</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge text-primary me-2"></i>快速操作</h6>
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('doctor.patients') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-people me-2"></i>查看患者列表
+                </a>
+                <a href="{{ url_for('doctor.reminders') }}" class="btn btn-outline-warning">
+                    <i class="bi bi-bell me-2"></i>管理提醒
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>血糖参考范围</h6>
+            <table class="table table-sm mb-0">
+                <tbody>
+                    <tr><td class="text-muted">正常空腹</td><td><span class="badge bg-success">3.9 - 6.1 mmol/L</span></td></tr>
+                    <tr><td class="text-muted">正常餐后2h</td><td><span class="badge bg-success">< 7.8 mmol/L</span></td></tr>
+                    <tr><td class="text-muted">偏高阈值</td><td><span class="badge bg-danger">&gt; 11.1 mmol/L</span></td></tr>
+                    <tr><td class="text-muted">偏低阈值</td><td><span class="badge bg-warning text-dark">&lt; 3.9 mmol/L</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

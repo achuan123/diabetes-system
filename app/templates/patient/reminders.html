@@ -1,0 +1,51 @@
+{% extends 'patient/base_mobile.html' %}
+{% block title %}健康提醒 - 糖友健康{% endblock %}
+{% block topbar_title %}健康提醒{% endblock %}
+
+{% block content %}
+{% for reminder in pagination.items %}
+<div class="app-card" style="padding:14px 16px;border-left:4px solid
+    {% if reminder.level == 'urgent' %}#C62828
+    {% elif reminder.level == 'high' %}#E65100
+    {% elif reminder.level == 'medium' %}#F9A825
+    {% else %}#1976D2{% endif %};">
+    <div class="d-flex align-items-start">
+        <div style="flex:1;">
+            <div style="font-size:.95rem;line-height:1.5;">{{ reminder.content }}</div>
+            <div style="font-size:.78rem;color:#9E9E9E;margin-top:6px;">
+                <i class="bi bi-person-badge me-1"></i>{{ reminder.doctor.name if reminder.doctor else '系统' }}
+                &nbsp;·&nbsp;
+                <i class="bi bi-clock me-1"></i>{{ reminder.created_at.strftime('%Y-%m-%d') }}
+            </div>
+        </div>
+        <span class="badge ms-2 mt-1
+            {% if reminder.level == 'urgent' %}bg-danger
+            {% elif reminder.level == 'high' %}bg-warning text-dark
+            {% elif reminder.level == 'medium' %}bg-info
+            {% else %}bg-secondary{% endif %}" style="font-size:.72rem;white-space:nowrap;">
+            {% if reminder.level == 'urgent' %}紧急
+            {% elif reminder.level == 'high' %}重要
+            {% elif reminder.level == 'medium' %}一般
+            {% else %}提示{% endif %}
+        </span>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5" style="color:#BDBDBD;">
+    <i class="bi bi-bell-slash" style="font-size:3rem;"></i>
+    <p class="mt-2">暂无健康提醒</p>
+</div>
+{% endfor %}
+
+{% if pagination.pages > 1 %}
+<div class="d-flex justify-content-between align-items-center mt-2 px-1">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('patient.reminders', page=pagination.prev_num) }}" class="btn btn-sm btn-outline-secondary">上一页</a>
+    {% else %}<span></span>{% endif %}
+    <span style="font-size:.85rem;color:#9E9E9E;">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for('patient.reminders', page=pagination.next_num) }}" class="btn btn-sm btn-outline-secondary">下一页</a>
+    {% else %}<span></span>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

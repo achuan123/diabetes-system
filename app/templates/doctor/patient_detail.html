@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% block title %}{{ patient.name }} - 患者详情{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <a href="{{ url_for('doctor.patients') }}" class="btn btn-outline-secondary btn-sm me-3">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <h4 class="mb-0"><i class="bi bi-person-lines-fill me-2 text-primary"></i>患者详情</h4>
+</div>
+
+<!-- Patient Info Card -->
+<div class="card mb-4">
+    <div class="card-header fw-bold"><i class="bi bi-person me-2"></i>基本信息</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3"><span class="text-muted">姓名：</span><strong>{{ patient.name }}</strong></div>
+            <div class="col-md-3"><span class="text-muted">年龄：</span>{{ patient.age or '-' }} 岁</div>
+            <div class="col-md-3"><span class="text-muted">性别：</span>
+                {% if patient.gender == 'male' %}男{% elif patient.gender == 'female' %}女{% else %}其他{% endif %}
+            </div>
+            <div class="col-md-3"><span class="text-muted">电话：</span>{{ patient.phone or '-' }}</div>
+            <div class="col-md-3 mt-2"><span class="text-muted">糖尿病类型：</span>{{ patient.diabetes_type or '-' }}</div>
+            <div class="col-md-6 mt-2"><span class="text-muted">地址：</span>{{ patient.address or '-' }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="card mb-4">
+    <div class="card-header fw-bold"><i class="bi bi-graph-up me-2"></i>近30天血糖趋势</div>
+    <div class="card-body">
+        <canvas id="glucoseChart" height="80"></canvas>
+    </div>
+</div>
+
+<!-- Blood Glucose Records -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-droplet me-2 text-danger"></i>血糖记录（最近20条）</span>
+        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#addGlucoseModal">
+            <i class="bi bi-plus-lg me-1"></i>添加记录
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>测量时间</th>
+                    <th>血糖值 (mmol/L)</th>
+                    <th>状态</th>
+                    <th>餐前/餐后</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in glucose_records %}
+                <tr>
+                    <td>{{ r.measure_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if r.value > glucose_high %}
+                            <span class="badge bg-danger fs-6">{{ '%.1f'|format(r.value) }}</span>
+                        {% elif r.value < glucose_low %}
+                            <span class="badge bg-warning text-dark fs-6">{{ '%.1f'|format(r.value) }}</span>
+                        {% else %}
+                            <span class="badge bg-success fs-6">{{ '%.1f'|format(r.value) }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if r.value > glucose_high %}
+                            <span class="text-danger"><i class="bi bi-arrow-up-circle-fill"></i> 偏高</span>
+                        {% elif r.value < glucose_low %}
+                            <span class="text-warning"><i class="bi bi-arrow-down-circle-fill"></i> 偏低</span>
+                        {% else %}
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> 正常</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if r.meal_status == 'before_meal' %}餐前
+                        {% elif r.meal_status == 'after_meal' %}餐后
+                        {% elif r.meal_status == 'fasting' %}空腹
+                        {% elif r.meal_status == 'random' %}随机
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>{{ r.remark or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-3">暂无血糖记录</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Exercise Records -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-activity me-2 text-success"></i>运动记录（最近20条）</span>
+        <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addExerciseModal">
+            <i class="bi bi-plus-lg me-1"></i>添加记录
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>记录时间</th>
+                    <th>运动类型</th>
+                    <th>时长（分钟）</th>
+                    <th>消耗热量</th>
+                    <th>强度</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in exercise_records %}
+                <tr>
+                    <td>{{ r.record_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ r.exercise_type or '-' }}</td>
+                    <td>{{ r.duration or '-' }}</td>
+                    <td>{{ r.calories or '-' }} kcal</td>
+                    <td>
+                        {% if r.intensity == 'low' %}<span class="badge bg-success">低</span>
+                        {% elif r.intensity == 'medium' %}<span class="badge bg-warning text-dark">中</span>
+                        {% elif r.intensity == 'high' %}<span class="badge bg-danger">高</span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>{{ r.remark or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-3">暂无运动记录</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Glucose Modal -->
+<div class="modal fade" id="addGlucoseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-droplet me-2 text-danger"></i>添加血糖记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="form_type" value="glucose">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">血糖值 (mmol/L) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.1" min="0" max="50" name="value" class="form-control"
+                               placeholder="例如：6.5" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">测量时间 <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="measure_time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">餐前/餐后</label>
+                        <select name="meal_status" class="form-select">
+                            <option value="">请选择</option>
+                            <option value="fasting">空腹</option>
+                            <option value="before_meal">餐前</option>
+                            <option value="after_meal">餐后</option>
+                            <option value="random">随机</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">备注</label>
+                        <textarea name="remark" class="form-control" rows="2" placeholder="可选备注..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-check-lg me-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Exercise Modal -->
+<div class="modal fade" id="addExerciseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-activity me-2 text-success"></i>添加运动记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="form_type" value="exercise">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">运动类型</label>
+                        <input type="text" name="exercise_type" class="form-control" placeholder="例如：步行、慢跑、游泳">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label fw-semibold">时长（分钟）</label>
+                            <input type="number" min="1" name="duration" class="form-control" placeholder="30">
+                        </div>
+                        <div class="col">
+                            <label class="form-label fw-semibold">消耗热量 (kcal)</label>
+                            <input type="number" min="0" name="calories" class="form-control" placeholder="150">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">运动强度</label>
+                        <select name="intensity" class="form-select">
+                            <option value="">请选择</option>
+                            <option value="low">低强度</option>
+                            <option value="medium">中强度</option>
+                            <option value="high">高强度</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">记录时间 <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="record_time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">备注</label>
+                        <textarea name="remark" class="form-control" rows="2" placeholder="可选备注..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Set default datetime to now
+    const now = new Date();
+    const padWithZero = n => String(n).padStart(2, '0');
+    const localIso = `${now.getFullYear()}-${padWithZero(now.getMonth()+1)}-${padWithZero(now.getDate())}T${padWithZero(now.getHours())}:${padWithZero(now.getMinutes())}`;
+    document.querySelectorAll('input[type="datetime-local"]').forEach(el => el.value = localIso);
+
+    // Fetch glucose chart data
+    fetch('{{ url_for("doctor.glucose_data", patient_id=patient.id) }}')
+        .then(r => r.json())
+        .then(data => {
+            const ctx = document.getElementById('glucoseChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: '血糖值 (mmol/L)',
+                        data: data.values,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13,110,253,0.08)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'mmol/L' },
+                            min: Math.max(0, (data.glucose_low || 3.9) - 1),
+                            suggestedMax: 15
+                        }
+                    }
+                }
+            });
+        })
+        .catch(() => {
+            document.getElementById('glucoseChart').parentElement.innerHTML =
+                '<p class="text-muted text-center py-3">暂无图表数据</p>';
+        });
+});
+</script>
+{% endblock %}

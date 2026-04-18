@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>{% block title %}糖友健康{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --app-primary: #1976D2;
+            --app-primary-dark: #1565C0;
+            --app-accent: #42A5F5;
+            --app-bg: #F5F7FA;
+            --bottom-nav-height: 60px;
+            --top-bar-height: 56px;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body {
+            height: 100%;
+            font-size: 16px;
+            background: var(--app-bg);
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            overscroll-behavior: none;
+        }
+        /* Top bar */
+        .app-topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--top-bar-height);
+            background: var(--app-primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,.2);
+        }
+        .app-topbar .title { font-size: 1.1rem; font-weight: 600; flex: 1; text-align: center; }
+        .app-topbar .btn-icon {
+            background: none; border: none; color: #fff;
+            font-size: 1.3rem; padding: 4px 8px; cursor: pointer;
+        }
+        /* Scrollable content area */
+        .app-content {
+            position: fixed;
+            top: var(--top-bar-height);
+            bottom: var(--bottom-nav-height);
+            left: 0; right: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px;
+        }
+        /* Bottom navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: var(--bottom-nav-height);
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            z-index: 1000;
+            box-shadow: 0 -2px 8px rgba(0,0,0,.08);
+        }
+        .bottom-nav a {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #9E9E9E;
+            text-decoration: none;
+            font-size: 0.65rem;
+            padding: 6px 0;
+            transition: color .2s;
+        }
+        .bottom-nav a i { font-size: 1.4rem; margin-bottom: 2px; }
+        .bottom-nav a.active { color: var(--app-primary); }
+        .bottom-nav a:active { opacity: .7; }
+        /* Cards */
+        .app-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+        }
+        /* Flash messages */
+        .flash-area { margin-bottom: 10px; }
+        .flash-area .alert { border-radius: 10px; font-size: .9rem; padding: 10px 14px; }
+        /* Buttons */
+        .btn-app-primary {
+            background: var(--app-primary);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+        }
+        .btn-app-primary:active { background: var(--app-primary-dark); }
+        /* Form controls */
+        .form-control, .form-select {
+            border-radius: 10px;
+            font-size: 1rem;
+            padding: 10px 14px;
+            border-color: #e0e0e0;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--app-primary);
+            box-shadow: 0 0 0 0.2rem rgba(25,118,210,.15);
+        }
+        .form-label { font-weight: 600; color: #424242; font-size: .9rem; }
+        /* Badges */
+        .badge-level-low { background: #E3F2FD; color: #1565C0; }
+        .badge-level-medium { background: #FFF3E0; color: #E65100; }
+        .badge-level-high { background: #FCE4EC; color: #C62828; }
+        .badge-level-urgent { background: #B71C1C; color: #fff; }
+        /* Glucose value colors */
+        .glucose-normal { color: #2E7D32; }
+        .glucose-high { color: #C62828; }
+        .glucose-low { color: #E65100; }
+        /* Section headers */
+        .section-header {
+            font-size: .8rem;
+            font-weight: 700;
+            color: #9E9E9E;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 8px;
+        }
+        /* List items */
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #F5F5F5;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-item-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 16px);
+            right: 16px;
+            width: 52px; height: 52px;
+            background: var(--app-primary);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(25,118,210,.4);
+            cursor: pointer;
+            z-index: 999;
+        }
+        /* Chat bubbles */
+        .chat-bubble {
+            max-width: 75%;
+            border-radius: 16px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            font-size: .95rem;
+            line-height: 1.4;
+        }
+        .chat-patient {
+            background: var(--app-primary);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+            margin-left: auto;
+        }
+        .chat-doctor {
+            background: #fff;
+            color: #212121;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
+        }
+        .chat-time { font-size: .7rem; opacity: .6; margin-top: 2px; }
+        /* Offcanvas form sheet */
+        .offcanvas-bottom { border-radius: 20px 20px 0 0; }
+        .offcanvas-bottom .offcanvas-header {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 16px 20px 12px;
+        }
+        .offcanvas-bottom .offcanvas-body { padding: 16px 20px 24px; }
+        /* Stat chips */
+        .stat-chip {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+        }
+        .stat-chip .value { font-size: 1.6rem; font-weight: 700; color: var(--app-primary); }
+        .stat-chip .label { font-size: .75rem; color: #9E9E9E; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="app-topbar">
+    {% block topbar_left %}<span style="width:40px"></span>{% endblock %}
+    <span class="title">{% block topbar_title %}糖友健康{% endblock %}</span>
+    {% block topbar_right %}
+    <a href="{{ url_for('patient.logout') }}" class="btn-icon" title="退出">
+        <i class="bi bi-box-arrow-right"></i>
+    </a>
+    {% endblock %}
+</div>
+
+<!-- Main content -->
+<div class="app-content">
+    <div class="flash-area">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+</div>
+
+<!-- Bottom navigation -->
+<nav class="bottom-nav">
+    <a href="{{ url_for('patient.dashboard') }}"
+       class="{% if request.endpoint == 'patient.dashboard' %}active{% endif %}">
+        <i class="bi bi-house-fill"></i>首页
+    </a>
+    <a href="{{ url_for('patient.glucose') }}"
+       class="{% if request.endpoint == 'patient.glucose' %}active{% endif %}">
+        <i class="bi bi-droplet-fill"></i>血糖
+    </a>
+    <a href="{{ url_for('patient.exercise') }}"
+       class="{% if request.endpoint == 'patient.exercise' %}active{% endif %}">
+        <i class="bi bi-lightning-fill"></i>运动
+    </a>
+    <a href="{{ url_for('patient.consultation') }}"
+       class="{% if request.endpoint == 'patient.consultation' %}active{% endif %}">
+        <i class="bi bi-chat-dots-fill"></i>咨询
+    </a>
+    <a href="{{ url_for('patient.profile') }}"
+       class="{% if request.endpoint in ('patient.profile', 'patient.family', 'patient.reminders') %}active{% endif %}">
+        <i class="bi bi-person-fill"></i>我的
+    </a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

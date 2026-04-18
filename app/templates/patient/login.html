@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>患者登录 - 糖友健康</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(160deg, #1976D2 0%, #42A5F5 50%, #E3F2FD 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            padding: 24px 20px;
+        }
+        .app-icon {
+            width: 80px; height: 80px;
+            background: #fff;
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem;
+            color: #1976D2;
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+            margin-bottom: 16px;
+        }
+        .app-name { color: #fff; font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+        .app-slogan { color: rgba(255,255,255,.8); font-size: .9rem; margin-bottom: 32px; }
+        .login-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.12);
+        }
+        .login-card h5 { font-weight: 700; color: #212121; margin-bottom: 20px; }
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border-color: #e0e0e0;
+        }
+        .form-control:focus {
+            border-color: #1976D2;
+            box-shadow: 0 0 0 .2rem rgba(25,118,210,.2);
+        }
+        .btn-login {
+            background: #1976D2;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 13px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .btn-login:active { background: #1565C0; }
+        .hint { font-size: .82rem; color: #9E9E9E; text-align: center; margin-top: 16px; }
+        .staff-link { color: #1976D2; text-decoration: none; font-size: .85rem; }
+    </style>
+</head>
+<body>
+<div class="app-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+<div class="app-name">糖友健康</div>
+<div class="app-slogan">社区糖尿病自我管理平台</div>
+
+<div class="login-card">
+    <h5><i class="bi bi-person-circle me-2 text-primary"></i>患者登录</h5>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">手机号</label>
+            <div class="input-group">
+                <span class="input-group-text" style="border-radius:12px 0 0 12px;"><i class="bi bi-phone"></i></span>
+                <input type="tel" name="phone" class="form-control" style="border-radius:0 12px 12px 0;"
+                       placeholder="请输入注册手机号" required autofocus>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">密码</label>
+            <div class="input-group">
+                <span class="input-group-text" style="border-radius:12px 0 0 12px;"><i class="bi bi-lock"></i></span>
+                <input type="password" name="password" class="form-control" style="border-radius:0 12px 12px 0;"
+                       placeholder="请输入密码" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-login">
+            <i class="bi bi-box-arrow-in-right me-2"></i>登录
+        </button>
+    </form>
+    <div class="hint">
+        默认密码：<strong>123456</strong><br>
+        医生/管理员请<a href="{{ url_for('auth.login') }}" class="staff-link">点此登录</a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}患者咨询 - 糖尿病管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-chat-dots me-2 text-primary"></i>患者咨询</h4>
+</div>
+
+<div class="row g-3">
+    <!-- Patient list -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header fw-semibold py-2">
+                <i class="bi bi-people me-1"></i>我的患者
+            </div>
+            <div class="list-group list-group-flush" style="max-height:70vh;overflow-y:auto;">
+                {% for p in doctor_patients %}
+                <a href="{{ url_for('doctor.consultations', patient_id=p.id) }}"
+                   class="list-group-item list-group-item-action py-2
+                          {% if selected_patient and selected_patient.id == p.id %}active{% endif %}">
+                    <div class="fw-semibold">{{ p.name }}</div>
+                    <small class="text-muted">{{ p.diabetes_type or '—' }}</small>
+                </a>
+                {% else %}
+                <div class="list-group-item text-muted text-center py-3">暂无患者</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat area -->
+    <div class="col-md-9">
+        {% if selected_patient %}
+        <div class="card" style="height:72vh;display:flex;flex-direction:column;">
+            <div class="card-header fw-semibold py-2">
+                <i class="bi bi-person-circle me-1"></i>{{ selected_patient.name }} 的咨询记录
+            </div>
+            <!-- Messages -->
+            <div id="chatBody" style="flex:1;overflow-y:auto;padding:16px;background:#F8F9FA;">
+                {% if not messages %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-chat-square-dots" style="font-size:2.5rem;"></i>
+                    <p class="mt-2">暂无咨询消息</p>
+                </div>
+                {% endif %}
+                {% for msg in messages %}
+                {% if msg.sender == 'patient' %}
+                <div class="d-flex justify-content-start mb-3">
+                    <div style="max-width:70%;">
+                        <div style="font-size:.78rem;color:#9E9E9E;margin-bottom:3px;">
+                            <i class="bi bi-person-fill me-1"></i>{{ selected_patient.name }}
+                        </div>
+                        <div style="background:#fff;border-radius:0 12px 12px 12px;padding:10px 14px;
+                                    box-shadow:0 1px 3px rgba(0,0,0,.1);font-size:.95rem;">
+                            {{ msg.content }}
+                        </div>
+                        <div style="font-size:.72rem;color:#BDBDBD;margin-top:3px;">
+                            {{ msg.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="d-flex justify-content-end mb-3">
+                    <div style="max-width:70%;">
+                        <div style="font-size:.78rem;color:#9E9E9E;margin-bottom:3px;text-align:right;">
+                            {{ msg.doctor.name if msg.doctor else '医生' }} <i class="bi bi-person-badge-fill ms-1"></i>
+                        </div>
+                        <div style="background:#0d6efd;color:#fff;border-radius:12px 0 12px 12px;
+                                    padding:10px 14px;font-size:.95rem;">
+                            {{ msg.content }}
+                        </div>
+                        <div style="font-size:.72rem;color:#BDBDBD;margin-top:3px;text-align:right;">
+                            {{ msg.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Reply box -->
+            <div class="card-footer p-2">
+                <form method="post" action="{{ url_for('doctor.consultation_reply') }}" class="d-flex gap-2">
+                    <input type="hidden" name="patient_id" value="{{ selected_patient.id }}">
+                    <input type="text" name="content" class="form-control" placeholder="输入回复内容…" required>
+                    <button type="submit" class="btn btn-primary px-3">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card text-center py-5 text-muted">
+            <i class="bi bi-chat-dots" style="font-size:3rem;"></i>
+            <p class="mt-3">请在左侧选择患者查看咨询消息</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var chatBody = document.getElementById('chatBody');
+if (chatBody) chatBody.scrollTop = chatBody.scrollHeight;
+</script>
+{% endblock %}
