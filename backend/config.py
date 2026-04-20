@@ -6,4 +6,4 @@ class Config:
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', SECRET_KEY)
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///../database/diabetes.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MEDICAL_ENCRYPTION_KEY = os.getenv('MEDICAL_ENCRYPTION_KEY', '')
+    MEDICAL_ENCRYPTION_KEY = os.getenv('MEDICAL_ENCRYPTION_KEY')

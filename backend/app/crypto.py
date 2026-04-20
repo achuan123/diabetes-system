@@ -1,16 +1,12 @@
 import base64
-import hashlib
 
 from cryptography.fernet import Fernet
 
 
-def _fernet_key(secret: str) -> bytes:
-    digest = hashlib.sha256(secret.encode('utf-8')).digest()
-    return base64.urlsafe_b64encode(digest)
-
-
 def get_cipher(config) -> Fernet:
-    key = config.get('MEDICAL_ENCRYPTION_KEY') or _fernet_key(config['SECRET_KEY']).decode('utf-8')
+    key = config.get('MEDICAL_ENCRYPTION_KEY')
+    if not key:
+        raise RuntimeError('MEDICAL_ENCRYPTION_KEY must be configured')
     return Fernet(key.encode('utf-8'))
 
 

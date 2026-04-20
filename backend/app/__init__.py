@@ -10,6 +10,8 @@ from .routes import api
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    if not app.config.get('MEDICAL_ENCRYPTION_KEY'):
+        raise RuntimeError('MEDICAL_ENCRYPTION_KEY is required for encrypted medical data storage')
 
     db.init_app(app)
     jwt.init_app(app)

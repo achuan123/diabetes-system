@@ -9,7 +9,7 @@ class TestConfig:
     JWT_SECRET_KEY = 'test-jwt'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MEDICAL_ENCRYPTION_KEY = ''
+    MEDICAL_ENCRYPTION_KEY = 'BhwDGcyDHdoH0VwXP53dBB_QrmrvF-Gu2bCE1LfhRNM='
 
 
 def _auth_header(token):
