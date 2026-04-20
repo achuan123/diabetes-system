@@ -1,0 +1,8 @@
+{
+  "name": "diabetes-mobile-app",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "echo '请使用 HBuilderX 或 uni-cli 运行 uni-app 项目'"
+  }
+}
