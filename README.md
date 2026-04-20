@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 糖尿病管理系统 / Diabetes Management System
 
 基于 Flask + MySQL 的糖尿病患者管理系统，支持医生和管理员两种角色。
@@ -126,3 +127,24 @@ python run.py
 - **后端**: Flask 3.0, Flask-SQLAlchemy, PyMySQL
 - **前端**: Bootstrap 5, Chart.js 4, Bootstrap Icons
 - **数据库**: MySQL 8.0
+=======
+# Diabetes Management System
+
+This is a project to manage diabetes effectively.
+
+## Overview
+
+- User authentication
+- Blood sugar tracking
+- Medication management
+- Reporting
+
+## Features
+- Monitoring
+- Statistical analysis
+- User notifications
+
+## Installation
+
+Instructions on how to set up the project locally.
+
