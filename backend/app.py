@@ -2,7 +2,6 @@ import os
 
 from app import create_app
 
-os.environ.setdefault('MEDICAL_ENCRYPTION_KEY', 'BhwDGcyDHdoH0VwXP53dBB_QrmrvF-Gu2bCE1LfhRNM=')
 app = create_app()
 
 if __name__ == '__main__':

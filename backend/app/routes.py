@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, jwt_required
+from sqlalchemy.orm import aliased
 
 from .extensions import db
 from .models import HealthRecord, Message, Reminder, User
@@ -251,29 +252,62 @@ def doctor_patients():
     return jsonify([u.to_dict() for u in users])
 
 
+@api.get('/doctor/records')
+@jwt_required()
+def doctor_records():
+    """Return all health records for all patients assigned to the requesting doctor."""
+    me = _current_user()
+    if me.role != 'doctor':
+        return jsonify({'error': 'doctor only'}), 403
+    record_type = request.args.get('record_type')
+    patient_alias = aliased(User)
+    q = (
+        db.session.query(HealthRecord, patient_alias.name.label('patient_name'))
+        .join(patient_alias, HealthRecord.patient_id == patient_alias.id)
+        .filter(patient_alias.doctor_id == me.id)
+    )
+    if record_type:
+        q = q.filter(HealthRecord.record_type == record_type)
+    rows = q.order_by(HealthRecord.id.desc()).limit(500).all()
+    return jsonify([
+        {
+            'id': r.id,
+            'patient_id': r.patient_id,
+            'patient_name': name,
+            'record_type': r.record_type,
+            'value': r.get_value(current_app.config),
+            'unit': r.unit,
+            'measured_at': r.measured_at.isoformat(),
+        }
+        for r, name in rows
+    ])
+
+
 @api.get('/admin/records')
 @jwt_required()
 def admin_records():
     if get_jwt().get('role') != 'admin':
         return jsonify({'error': 'admin only'}), 403
     record_type = request.args.get('record_type')
-    q = HealthRecord.query
+    patient_alias = aliased(User)
+    q = (
+        db.session.query(HealthRecord, patient_alias.name.label('patient_name'))
+        .join(patient_alias, HealthRecord.patient_id == patient_alias.id)
+    )
     if record_type:
-        q = q.filter_by(record_type=record_type)
-    records = q.order_by(HealthRecord.id.desc()).limit(500).all()
-    patient_ids = {r.patient_id for r in records}
-    patients = {u.id: u.name for u in User.query.filter(User.id.in_(patient_ids)).all()} if patient_ids else {}
+        q = q.filter(HealthRecord.record_type == record_type)
+    rows = q.order_by(HealthRecord.id.desc()).limit(500).all()
     return jsonify([
         {
             'id': r.id,
             'patient_id': r.patient_id,
-            'patient_name': patients.get(r.patient_id, ''),
+            'patient_name': name,
             'record_type': r.record_type,
             'value': r.get_value(current_app.config),
             'unit': r.unit,
             'measured_at': r.measured_at.isoformat(),
         }
-        for r in records
+        for r, name in rows
     ])
 
 

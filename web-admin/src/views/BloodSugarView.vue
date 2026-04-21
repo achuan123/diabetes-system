@@ -71,16 +71,9 @@ async function loadData() {
   loading.value = true
   try {
     if (isAdmin.value) {
-      const all = await http.get('/admin/records?record_type=blood_sugar')
-      list.value = all
+      list.value = await http.get('/admin/records?record_type=blood_sugar')
     } else {
-      const patients = await http.get('/doctor/patients')
-      const results = []
-      for (const p of patients) {
-        const recs = await http.get(`/patient/records?patient_id=${p.id}`)
-        results.push(...recs.filter(r => r.record_type === 'blood_sugar').map(r => ({ ...r, patient_name: p.name })))
-      }
-      list.value = results.sort((a, b) => b.id - a.id)
+      list.value = await http.get('/doctor/records?record_type=blood_sugar')
     }
   } finally {
     loading.value = false
