@@ -1,0 +1,23 @@
+{
+  "name": "社区糖尿病患者端",
+  "appid": "__UNI__DIABETES",
+  "description": "社区糖尿病患者管理系统 - 患者移动端",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-compiler",
+    "compilerVersion": 3,
+    "splashscreen": { "alwaysShowBeforeRender": true, "waiting": true, "autoclose": true, "delay": 0 },
+    "modules": {},
+    "distribute": {
+      "android": { "permissions": [] },
+      "ios": {},
+      "sdkConfigs": {}
+    }
+  },
+  "quickapp": {},
+  "mp-weixin": { "appid": "", "setting": { "urlCheck": false }, "usingComponents": true },
+  "h5": { "devServer": { "port": 8080 }, "router": { "mode": "history" } }
+}

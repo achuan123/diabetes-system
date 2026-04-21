@@ -249,3 +249,58 @@ def doctor_patients():
         return jsonify({'error': 'doctor only'}), 403
     users = User.query.filter_by(role='patient', doctor_id=me.id).all()
     return jsonify([u.to_dict() for u in users])
+
+
+@api.get('/admin/records')
+@jwt_required()
+def admin_records():
+    if get_jwt().get('role') != 'admin':
+        return jsonify({'error': 'admin only'}), 403
+    record_type = request.args.get('record_type')
+    q = HealthRecord.query
+    if record_type:
+        q = q.filter_by(record_type=record_type)
+    records = q.order_by(HealthRecord.id.desc()).limit(500).all()
+    patient_ids = {r.patient_id for r in records}
+    patients = {u.id: u.name for u in User.query.filter(User.id.in_(patient_ids)).all()} if patient_ids else {}
+    return jsonify([
+        {
+            'id': r.id,
+            'patient_id': r.patient_id,
+            'patient_name': patients.get(r.patient_id, ''),
+            'record_type': r.record_type,
+            'value': r.get_value(current_app.config),
+            'unit': r.unit,
+            'measured_at': r.measured_at.isoformat(),
+        }
+        for r in records
+    ])
+
+
+@api.delete('/admin/users/<int:uid>')
+@jwt_required()
+def admin_delete_user(uid):
+    if get_jwt().get('role') != 'admin':
+        return jsonify({'error': 'admin only'}), 403
+    user = db.session.get(User, uid)
+    if not user:
+        return jsonify({'error': 'user not found'}), 404
+    if user.role == 'admin':
+        return jsonify({'error': 'cannot delete admin'}), 400
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
+@api.get('/admin/stats')
+@jwt_required()
+def admin_stats():
+    if get_jwt().get('role') != 'admin':
+        return jsonify({'error': 'admin only'}), 403
+    return jsonify({
+        'patients': User.query.filter_by(role='patient').count(),
+        'doctors': User.query.filter_by(role='doctor').count(),
+        'blood_sugar_records': HealthRecord.query.filter_by(record_type='blood_sugar').count(),
+        'oxygen_records': HealthRecord.query.filter_by(record_type='oxygen').count(),
+        'messages': Message.query.count(),
+    })

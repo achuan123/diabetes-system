@@ -1,18 +1,22 @@
-<template>
-  <view class="phone-shell">
-    <view class="header">社区糖尿病患者端</view>
-    <view class="body">
-      <view class="tile">手机号+密码注册登录</view>
-      <view class="tile">选择医生 / 医患消息</view>
-      <view class="tile">血糖血氧记录 / 用药饮食提醒</view>
-      <view class="tile">家属绑定与代管</view>
-    </view>
-  </view>
-</template>
+<script>
+export default {
+  onLaunch() {
+    const token = uni.getStorageSync('token')
+    if (!token) {
+      uni.reLaunch({ url: '/pages/login/login' })
+    }
+  },
+  onShow() {},
+  onHide() {}
+}
+</script>
 
 <style>
-.phone-shell { width: 100vw; min-height: 100vh; background: #eef2ff; }
-.header { padding: 20rpx; text-align: center; font-weight: 600; }
-.body { padding: 20rpx; }
-.tile { background: #fff; border-radius: 16rpx; padding: 20rpx; margin-bottom: 20rpx; }
+page { background-color: #f5f7fb; }
+.card { background: #fff; border-radius: 12rpx; padding: 24rpx; margin-bottom: 20rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.06); }
+.btn-primary { background: #1677ff; color: #fff; border-radius: 8rpx; padding: 20rpx; text-align: center; font-size: 30rpx; }
+.btn-default { background: #f0f0f0; color: #333; border-radius: 8rpx; padding: 20rpx; text-align: center; font-size: 30rpx; }
+.row { display: flex; align-items: center; margin-bottom: 20rpx; }
+.label { width: 160rpx; color: #666; font-size: 28rpx; flex-shrink: 0; }
+.input { flex: 1; border: 1rpx solid #e0e0e0; border-radius: 8rpx; padding: 16rpx; font-size: 28rpx; background: #fafafa; }
 </style>
